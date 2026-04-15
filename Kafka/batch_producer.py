@@ -22,7 +22,7 @@ from kafka.errors import KafkaError
 # --- Настройки по умолчанию ---
 KAFKA_BOOTSTRAP_SERVER = "localhost:9092"
 TOPIC = "raw-data"
-DATASET_PATH = "../../dataset"  # Относительный путь от kafka/
+DATASET_PATH = "../dataset"  # Относительный путь от kafka/
 LOG_DIR = "logs"
 
 # --- Настройка логирования ---
