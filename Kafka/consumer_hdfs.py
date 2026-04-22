@@ -57,25 +57,19 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 
 def create_consumer() -> KafkaConsumer:
-    """Создаёт и возвращает KafkaConsumer.
-
-    Returns:
-        Настроенный экземпляр KafkaConsumer.
-
-    Raises:
-        KafkaError: При невозможности подключиться к Kafka.
-    """
+    """Создаёт и возвращает KafkaConsumer."""
     try:
         consumer = KafkaConsumer(
             TOPIC,
             bootstrap_servers=KAFKA_BOOTSTRAP_SERVER,
             value_deserializer=lambda m: json.loads(m.decode("utf-8")),
             key_deserializer=lambda k: k.decode("utf-8") if k else None,
-            auto_offset_reset="earliest",
-            enable_auto_commit=True,
-            consumer_timeout_ms=5000  # Таймаут для проверки флага running
+            auto_offset_reset="earliest", # Читать с начала, если нет сохранённого offset
+            enable_auto_commit=True,      # Автоматически запоминать, где остановились
+            group_id="hdfs-consumer-group", # ВАЖНО: Уникальное имя группы
+            consumer_timeout_ms=5000
         )
-        logger.info(f"Consumer подключён к топику '{TOPIC}'")
+        logger.info(f"Consumer подключён к топику '{TOPIC}' (Group: hdfs-consumer-group)")
         return consumer
     except KafkaError as e:
         logger.error(f"Не удалось подключиться к Kafka: {e}")
@@ -118,10 +112,10 @@ def process_messages(consumer: KafkaConsumer):
     total_processed = 0
     total_errors = 0
 
-    logger.info("=" * 60)
+
     logger.info("Ожидание сообщений из Kafka...")
     logger.info("Для остановки нажмите Ctrl+C")
-    logger.info("=" * 60)
+
 
     while running:
         try:
@@ -156,22 +150,10 @@ def process_messages(consumer: KafkaConsumer):
 
     # Итоговая статистика
     logger.info("")
-    logger.info("=" * 60)
     logger.info("ЗАВЕРШЕНО")
-    logger.info("=" * 60)
     logger.info(f"Сохранено:    {total_processed} отзывов")
     logger.info(f"Ошибок:       {total_errors}")
     logger.info(f"Папка:        {Path(LOCAL_OUTPUT_DIR).resolve()}")
-    logger.info("")
-    logger.info("СЛЕДУЮЩИЕ ШАГИ:")
-    logger.info("1. Скопируйте папку temp_hdfs/ в общую папку VirtualBox")
-    logger.info("2. На Cloudera VM:")
-    logger.info("   hdfs dfs -mkdir -p /user/cloudera/raw_data/")
-    logger.info("   hdfs dfs -put -f /media/sf_*/temp_hdfs/* /user/cloudera/raw_data/")
-    logger.info("")
-    logger.info("3. Проверьте загрузку:")
-    logger.info("   hdfs dfs -ls -R /user/cloudera/raw_data/ | grep review | wc -l")
-    logger.info("=" * 60)
 
 
 def main():

@@ -159,7 +159,6 @@ def send_reviews(producer: KafkaProducer, dataset_path: str, limit: int = None):
             if limit is not None and total_sent >= limit:
                 logger.info(f"Достигнут лимит: {limit} отзывов")
                 producer.flush()
-                logger.info("=" * 60)
                 logger.info(f"Готово! Отправлено: {total_sent}, Ошибок: {total_errors}")
                 return
 
@@ -187,7 +186,6 @@ def send_reviews(producer: KafkaProducer, dataset_path: str, limit: int = None):
 
     # Финальная отправка всех буферизованных сообщений
     producer.flush()
-    logger.info("=" * 60)
     logger.info(f"Готово! Отправлено: {total_sent}, Ошибок: {total_errors}")
 
 
